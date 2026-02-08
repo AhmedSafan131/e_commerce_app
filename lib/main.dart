@@ -3,6 +3,7 @@ import 'package:e_commerce_app/core/theme/app_theme.dart';
 import 'package:e_commerce_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:e_commerce_app/features/auth/presentation/bloc/auth_event.dart';
 import 'package:e_commerce_app/features/cart/presentation/bloc/cart_bloc.dart';
+import 'package:e_commerce_app/features/products/data/datasources/product_remote_datasource.dart';
 import 'package:e_commerce_app/features/products/presentation/bloc/categories_cubit.dart';
 import 'package:e_commerce_app/features/products/presentation/bloc/product_bloc.dart';
 import 'package:e_commerce_app/firebase_options.dart';
@@ -15,6 +16,14 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await di.init();
+
+  // Seed products to Firestore on first run
+  try {
+    await di.sl<ProductRemoteDataSource>().seedProducts();
+  } catch (e) {
+    print('⚠️  [Main] Failed to seed products: $e');
+  }
+
   runApp(const MyApp());
 }
 

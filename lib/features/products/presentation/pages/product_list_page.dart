@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:e_commerce_app/features/products/presentation/bloc/categories_cubit.dart';
 import 'package:e_commerce_app/features/products/presentation/bloc/product_bloc.dart';
 import 'package:e_commerce_app/features/products/presentation/bloc/product_event.dart';
@@ -20,6 +22,7 @@ class _ProductListPageState extends State<ProductListPage> {
   final _scrollController = ScrollController();
   final _searchController = TextEditingController();
   String? _selectedCategory;
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -27,12 +30,16 @@ class _ProductListPageState extends State<ProductListPage> {
     context.read<ProductBloc>().add(const GetProductsEvent());
     context.read<CategoriesCubit>().loadCategories();
     _scrollController.addListener(_onScroll);
+
+    // Add listener for search with debounce
+    _searchController.addListener(_onSearchChanged);
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
     _searchController.dispose();
+    _debounce?.cancel();
     super.dispose();
   }
 
@@ -49,11 +56,22 @@ class _ProductListPageState extends State<ProductListPage> {
     return currentScroll >= (maxScroll * 0.9);
   }
 
-  void _onSearch(String query) {
+  void _onSearchChanged() {
+    // Cancel previous timer
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+
+    // Start new timer (500ms debounce)
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      _performSearch(_searchController.text);
+    });
+  }
+
+  void _performSearch(String query) {
+    print('🔍 [Search] Searching for: "$query"');
     context.read<ProductBloc>().add(
       GetProductsEvent(
         category: _selectedCategory,
-        query: query,
+        query: query.isEmpty ? null : query,
         isRefresh: true,
       ),
     );
@@ -70,7 +88,7 @@ class _ProductListPageState extends State<ProductListPage> {
     context.read<ProductBloc>().add(
       GetProductsEvent(
         category: _selectedCategory,
-        query: _searchController.text,
+        query: _searchController.text.isEmpty ? null : _searchController.text,
         isRefresh: true,
       ),
     );
@@ -135,9 +153,18 @@ class _ProductListPageState extends State<ProductListPage> {
                           hintText: 'Search for items',
                           border: InputBorder.none,
                         ),
-                        onSubmitted: _onSearch,
+                        // Changed from onSubmitted to onChanged for real-time search
+                        // Debounce is handled in _onSearchChanged listener
                       ),
                     ),
+                    if (_searchController.text.isNotEmpty)
+                      IconButton(
+                        icon: const Icon(Icons.clear, color: Colors.grey),
+                        onPressed: () {
+                          _searchController.clear();
+                          _performSearch('');
+                        },
+                      ),
                   ],
                 ),
               ),

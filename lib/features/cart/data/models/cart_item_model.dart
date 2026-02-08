@@ -7,6 +7,10 @@ class CartItemModel extends CartItemEntity {
     required super.quantity,
   });
 
+  // Convenience getters for Firestore operations
+  String get productId => product.id;
+  String get productName => product.name;
+
   factory CartItemModel.fromJson(Map<String, dynamic> json) {
     return CartItemModel(
       product: ProductModel.fromJson(json['product']),

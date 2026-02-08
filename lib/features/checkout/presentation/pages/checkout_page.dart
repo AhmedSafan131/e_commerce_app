@@ -44,7 +44,18 @@ class _CheckoutPageState extends State<CheckoutPage> {
       appBar: AppBar(title: const Text('Checkout')),
       body: BlocConsumer<CheckoutBloc, CheckoutState>(
         listener: (context, state) {
-          if (state.status == CheckoutStatus.orderCreated) {
+          // Navigate to WebView when payment URL is ready
+          if (state.status == CheckoutStatus.paymentReady) {
+            if (state.paymentUrl != null && state.orderId != null) {
+              context.push(
+                '/payment-webview',
+                extra: {
+                  'paymentUrl': state.paymentUrl!,
+                  'orderId': state.orderId!,
+                },
+              );
+            }
+          } else if (state.status == CheckoutStatus.orderCreated) {
             context.read<CartBloc>().add(ClearCartEvent());
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Order placed successfully!')),

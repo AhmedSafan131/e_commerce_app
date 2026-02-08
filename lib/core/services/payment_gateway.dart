@@ -1,9 +1,16 @@
 import 'package:dio/dio.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+// Payment result data
+class PaymentResult {
+  final String paymentUrl;
+  final String orderId;
+
+  PaymentResult({required this.paymentUrl, required this.orderId});
+}
+
 abstract class PaymentGateway {
-  Future<bool> processPayment({
+  Future<PaymentResult> processPayment({
     required double amount,
     required String currency,
   });
@@ -11,12 +18,15 @@ abstract class PaymentGateway {
 
 class MockStripeGateway implements PaymentGateway {
   @override
-  Future<bool> processPayment({
+  Future<PaymentResult> processPayment({
     required double amount,
     required String currency,
   }) async {
     await Future.delayed(const Duration(seconds: 1));
-    return true;
+    return PaymentResult(
+      paymentUrl: 'https://example.com/payment',
+      orderId: 'mock-order-${DateTime.now().millisecondsSinceEpoch}',
+    );
   }
 }
 
@@ -24,11 +34,7 @@ class PaymobGateway implements PaymentGateway {
   final Dio dio;
   final FirebaseAuth firebaseAuth;
 
-  // Paymob API Configuration - Direct Integration (No Server)
   static const String paymobBaseUrl = 'https://accept.paymob.com/api';
-
-  // ⚠️ WARNING: In production, these should NEVER be in the app code!
-  // For learning/testing purposes only
   static const String apiKey =
       'ZXlKaGJHY2lPaUpJVXpVeE1pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SmpiR0Z6Y3lJNklrMWxjbU5vWVc1MElpd2ljSEp2Wm1sc1pWOXdheUk2TVRFeU9EYzROaXdpYm1GdFpTSTZJbWx1YVhScFlXd2lmUS45ZXpQbllOM3MtTGd5YjRIaUQxempFemhqLVRmWDZqbUl1Y1pqa3lDSG53RndYN2RtcktUNTV4RHNDbGlEYUZNM1F0cXZGYnZBSzhwSEdFNjJnNnJLZw==';
   static const int cardIntegrationId = 5499482;
@@ -37,10 +43,9 @@ class PaymobGateway implements PaymentGateway {
   PaymobGateway({
     required this.dio,
     required this.firebaseAuth,
-    String? functionsBaseUrl, // Not used in direct integration
+    String? functionsBaseUrl,
   });
 
-  /// Step 1: Authenticate with Paymob and get auth token
   Future<String> _getAuthToken() async {
     print('🔵 [Paymob] Step 1: Getting authentication token...');
 
@@ -110,7 +115,7 @@ class PaymobGateway implements PaymentGateway {
   }
 
   @override
-  Future<bool> processPayment({
+  Future<PaymentResult> processPayment({
     required double amount,
     required String currency,
   }) async {
@@ -127,11 +132,9 @@ class PaymobGateway implements PaymentGateway {
 
       print('🔵 [Paymob] User ID: $uid');
 
-      // Prepare data
       final amountCents = (amount * 100).round();
       final merchantOrderId = '$uid-${DateTime.now().millisecondsSinceEpoch}';
 
-      // Get user name, ensuring it's never blank
       final displayName = firebaseAuth.currentUser?.displayName ?? '';
       final nameParts = displayName.trim().split(' ');
       final firstName = nameParts.isNotEmpty && nameParts.first.isNotEmpty
@@ -157,10 +160,8 @@ class PaymobGateway implements PaymentGateway {
         'state': 'NA',
       };
 
-      // Step 1: Get auth token
       final authToken = await _getAuthToken();
 
-      // Step 2: Create order
       final paymobOrderId = await _createOrder(
         authToken: authToken,
         amountCents: amountCents,
@@ -168,7 +169,6 @@ class PaymobGateway implements PaymentGateway {
         merchantOrderId: merchantOrderId,
       );
 
-      // Step 3: Get payment key
       final paymentToken = await _getPaymentKey(
         authToken: authToken,
         orderId: paymobOrderId,
@@ -177,29 +177,17 @@ class PaymobGateway implements PaymentGateway {
         billingData: billingData,
       );
 
-      // Step 4: Generate payment URL
       final paymentUrl =
           '$paymobBaseUrl/acceptance/iframes/$iframeId?payment_token=$paymentToken';
       print('✅ [Paymob] Payment URL generated: $paymentUrl');
 
-      // Step 5: Open payment page in browser
-      final uri = Uri.parse(paymentUrl);
-      final canLaunch = await canLaunchUrl(uri);
-
-      if (!canLaunch) {
-        print('❌ [Paymob] Error: Cannot launch URL');
-        throw Exception(
-          'Cannot open payment page. Please check your browser settings.',
-        );
-      }
-
-      print('🔵 [Paymob] Launching payment URL in browser...');
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-
       print('✅ [Paymob] Payment process completed successfully!');
-      print('ℹ️  [Paymob] User will complete payment in browser');
+      print('ℹ️  [Paymob] Returning payment URL for WebView');
 
-      return true;
+      return PaymentResult(
+        paymentUrl: paymentUrl,
+        orderId: paymobOrderId.toString(),
+      );
     } catch (e) {
       print('❌ [Paymob] Payment error: $e');
 

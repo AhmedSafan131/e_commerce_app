@@ -70,7 +70,7 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> processPayment(
+  Future<Either<Failure, PaymentResult>> processPayment(
     double amount,
     String currency,
   ) async {
@@ -80,14 +80,11 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
               amount: amount,
               currency: currency,
             )
-          : await remoteDataSource.processPayment(amount, currency);
-      if (result) {
-        return const Right(true);
-      } else {
-        return const Left(ServerFailure('Payment failed'));
-      }
+          : throw Exception('Payment gateway not configured');
+
+      return Right(result);
     } catch (e) {
-      return const Left(ServerFailure('Payment error'));
+      return Left(ServerFailure('Payment error: ${e.toString()}'));
     }
   }
 }

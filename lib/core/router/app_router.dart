@@ -1,6 +1,7 @@
 import 'package:e_commerce_app/features/cart/presentation/pages/cart_page.dart';
 import 'package:e_commerce_app/features/checkout/presentation/bloc/checkout_bloc.dart';
 import 'package:e_commerce_app/features/checkout/presentation/pages/checkout_page.dart';
+import 'package:e_commerce_app/features/checkout/presentation/pages/payment_webview_page.dart';
 import 'package:e_commerce_app/features/products/domain/entities/product_entity.dart';
 import 'package:e_commerce_app/injection_container.dart' as di;
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -36,6 +37,16 @@ final router = GoRouter(
         create: (_) => di.sl<CheckoutBloc>(),
         child: const CheckoutPage(),
       ),
+    ),
+    GoRoute(
+      path: '/payment-webview',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, String>;
+        return PaymentWebViewPage(
+          paymentUrl: extra['paymentUrl']!,
+          orderId: extra['orderId']!,
+        );
+      },
     ),
     GoRoute(
       path: '/orders',

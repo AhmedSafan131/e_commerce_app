@@ -1,4 +1,4 @@
-import 'package:e_commerce_app/features/cart/data/datasources/cart_local_datasource.dart';
+import 'package:e_commerce_app/features/cart/data/datasources/cart_remote_datasource.dart';
 import 'package:e_commerce_app/features/cart/data/repositories/cart_repository_impl.dart';
 import 'package:e_commerce_app/features/cart/domain/repositories/cart_repository.dart';
 import 'package:e_commerce_app/features/cart/domain/usecases/add_to_cart_usecase.dart';
@@ -91,7 +91,7 @@ Future<void> init() async {
 
   // Data sources
   sl.registerLazySingleton<ProductRemoteDataSource>(
-    () => ProductRemoteDataSourceImpl(),
+    () => ProductRemoteDataSourceImpl(firestore: sl()),
   );
 
   // Features - Cart
@@ -115,12 +115,12 @@ Future<void> init() async {
 
   // Repository
   sl.registerLazySingleton<CartRepository>(
-    () => CartRepositoryImpl(localDataSource: sl()),
+    () => CartRepositoryImpl(remoteDataSource: sl()),
   );
 
   // Data sources
-  sl.registerLazySingleton<CartLocalDataSource>(
-    () => CartLocalDataSourceImpl(sharedPreferences: sl()),
+  sl.registerLazySingleton<CartRemoteDataSource>(
+    () => CartRemoteDataSourceImpl(firestore: sl(), firebaseAuth: sl()),
   );
 
   // Features - Checkout
