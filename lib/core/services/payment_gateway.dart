@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:e_commerce_app/core/utils/app_logger.dart';
 
 // Payment result data
 class PaymentResult {
@@ -35,10 +37,11 @@ class PaymobGateway implements PaymentGateway {
   final FirebaseAuth firebaseAuth;
 
   static const String paymobBaseUrl = 'https://accept.paymob.com/api';
-  static const String apiKey =
-      'ZXlKaGJHY2lPaUpJVXpVeE1pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SmpiR0Z6Y3lJNklrMWxjbU5vWVc1MElpd2ljSEp2Wm1sc1pWOXdheUk2TVRFeU9EYzROaXdpYm1GdFpTSTZJbWx1YVhScFlXd2lmUS45ZXpQbllOM3MtTGd5YjRIaUQxempFemhqLVRmWDZqbUl1Y1pqa3lDSG53RndYN2RtcktUNTV4RHNDbGlEYUZNM1F0cXZGYnZBSzhwSEdFNjJnNnJLZw==';
-  static const int cardIntegrationId = 5499482;
-  static const String iframeId = '1003704';
+
+  String get apiKey => dotenv.env['PAYMOB_API_KEY'] ?? '';
+  int get cardIntegrationId =>
+      int.tryParse(dotenv.env['PAYMOB_INTEGRATION_ID'] ?? '') ?? 0;
+  String get iframeId => dotenv.env['PAYMOB_IFRAME_ID'] ?? '';
 
   PaymobGateway({
     required this.dio,
@@ -47,7 +50,7 @@ class PaymobGateway implements PaymentGateway {
   });
 
   Future<String> _getAuthToken() async {
-    print('🔵 [Paymob] Step 1: Getting authentication token...');
+    AppLogger.info('[Paymob] Step 1: Getting authentication token...');
 
     final response = await dio.post(
       '$paymobBaseUrl/auth/tokens',
@@ -55,7 +58,9 @@ class PaymobGateway implements PaymentGateway {
     );
 
     final token = response.data['token'] as String;
-    print('✅ [Paymob] Auth token received: ${token.substring(0, 20)}...');
+    AppLogger.success(
+      '[Paymob] Auth token received: ${token.substring(0, 20)}...',
+    );
     return token;
   }
 
@@ -66,7 +71,7 @@ class PaymobGateway implements PaymentGateway {
     required String currency,
     required String merchantOrderId,
   }) async {
-    print('🔵 [Paymob] Step 2: Creating order...');
+    AppLogger.info('[Paymob] Step 2: Creating order...');
 
     final response = await dio.post(
       '$paymobBaseUrl/ecommerce/orders',
@@ -81,7 +86,7 @@ class PaymobGateway implements PaymentGateway {
     );
 
     final orderId = response.data['id'] as int;
-    print('✅ [Paymob] Order created with ID: $orderId');
+    AppLogger.success('[Paymob] Order created with ID: $orderId');
     return orderId;
   }
 
@@ -93,7 +98,7 @@ class PaymobGateway implements PaymentGateway {
     required String currency,
     required Map<String, dynamic> billingData,
   }) async {
-    print('🔵 [Paymob] Step 3: Getting payment key...');
+    AppLogger.info('[Paymob] Step 3: Getting payment key...');
 
     final response = await dio.post(
       '$paymobBaseUrl/acceptance/payment_keys',
@@ -108,8 +113,8 @@ class PaymobGateway implements PaymentGateway {
     );
 
     final paymentToken = response.data['token'] as String;
-    print(
-      '✅ [Paymob] Payment key received: ${paymentToken.substring(0, 20)}...',
+    AppLogger.success(
+      '[Paymob] Payment key received: ${paymentToken.substring(0, 20)}...',
     );
     return paymentToken;
   }
@@ -120,17 +125,17 @@ class PaymobGateway implements PaymentGateway {
     required String currency,
   }) async {
     try {
-      print('🔵 [Paymob] Starting DIRECT payment process (No Server)...');
-      print('🔵 [Paymob] Amount: $amount $currency');
+      AppLogger.info('[Paymob] Starting DIRECT payment process (No Server)...');
+      AppLogger.info('[Paymob] Amount: $amount $currency');
 
       // Check authentication
       final uid = firebaseAuth.currentUser?.uid;
       if (uid == null) {
-        print('❌ [Paymob] Error: User not authenticated');
+        AppLogger.error('[Paymob] Error: User not authenticated');
         throw Exception('Not authenticated. Please login first.');
       }
 
-      print('🔵 [Paymob] User ID: $uid');
+      AppLogger.info('[Paymob] User ID: $uid');
 
       final amountCents = (amount * 100).round();
       final merchantOrderId = '$uid-${DateTime.now().millisecondsSinceEpoch}';
@@ -179,24 +184,24 @@ class PaymobGateway implements PaymentGateway {
 
       final paymentUrl =
           '$paymobBaseUrl/acceptance/iframes/$iframeId?payment_token=$paymentToken';
-      print('✅ [Paymob] Payment URL generated: $paymentUrl');
+      AppLogger.success('[Paymob] Payment URL generated: $paymentUrl');
 
-      print('✅ [Paymob] Payment process completed successfully!');
-      print('ℹ️  [Paymob] Returning payment URL for WebView');
+      AppLogger.success('[Paymob] Payment process completed successfully!');
+      AppLogger.info('[Paymob] Returning payment URL for WebView');
 
       return PaymentResult(
         paymentUrl: paymentUrl,
         orderId: paymobOrderId.toString(),
       );
     } catch (e) {
-      print('❌ [Paymob] Payment error: $e');
+      AppLogger.error('[Paymob] Payment error: $e');
 
       if (e is DioException) {
         if (e.response != null) {
-          print('❌ [Paymob] API Error: ${e.response?.data}');
+          AppLogger.error('[Paymob] API Error: ${e.response?.data}');
           throw Exception('Payment API error: ${e.response?.data}');
         } else {
-          print('❌ [Paymob] Network error: ${e.message}');
+          AppLogger.error('[Paymob] Network error: ${e.message}');
           throw Exception(
             'Network error. Please check your internet connection.',
           );

@@ -29,28 +29,17 @@ class CartRepositoryImpl implements CartRepository {
       final index = items.indexWhere((item) => item.product.id == product.id);
 
       if (index != -1) {
-        // Item exists, increment quantity
         final existingItem = items[index];
         final newQuantity = existingItem.quantity + 1;
         await remoteDataSource.updateQuantity(product.id, newQuantity);
 
-        // Update local list
         items[index] = CartItemModel(
-          product: existingItem.product as ProductModel,
+          product: ProductModel.fromEntity(existingItem.product),
           quantity: newQuantity,
         );
       } else {
-        // New item, add to cart
         final newItem = CartItemModel(
-          product: ProductModel(
-            id: product.id,
-            name: product.name,
-            description: product.description,
-            price: product.price,
-            imageUrl: product.imageUrl,
-            stock: product.stock,
-            category: product.category,
-          ),
+          product: ProductModel.fromEntity(product),
           quantity: 1,
         );
         await remoteDataSource.addItem(newItem);

@@ -11,6 +11,21 @@ class ProductModel extends ProductEntity {
     required super.category,
   });
 
+  factory ProductModel.fromEntity(ProductEntity entity) {
+    if (entity is ProductModel) return entity;
+    return ProductModel(
+      id: entity.id,
+      name: entity.name,
+      description: entity.description,
+      price: entity.price,
+      imageUrl: entity.imageUrl,
+      stock: entity.stock,
+      category: entity.category,
+    );
+  }
+
+  ProductEntity toEntity() => this;
+
   factory ProductModel.fromJson(Map<String, dynamic> json) {
     final dynamic rawCategory = json['category'];
     final bool isRemoteApiShape =

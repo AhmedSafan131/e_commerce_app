@@ -38,11 +38,16 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     );
   }
 
-  Future<void> _onAddToCart(AddToCartEvent event, Emitter<CartState> emit) async {
+  Future<void> _onAddToCart(
+    AddToCartEvent event,
+    Emitter<CartState> emit,
+  ) async {
     final result = await addToCartUseCase(event.product);
     result.fold(
       (failure) => emit(CartError(message: failure.message)),
-      (cart) => emit(CartLoaded(cart: cart)),
+      (cart) => emit(
+        CartLoaded(cart: cart, message: '${event.product.name} added to cart'),
+      ),
     );
   }
 
@@ -62,7 +67,10 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     Emitter<CartState> emit,
   ) async {
     final result = await updateQuantityUseCase(
-      UpdateQuantityParams(productId: event.productId, quantity: event.quantity),
+      UpdateQuantityParams(
+        productId: event.productId,
+        quantity: event.quantity,
+      ),
     );
     result.fold(
       (failure) => emit(CartError(message: failure.message)),
@@ -70,7 +78,10 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     );
   }
 
-  Future<void> _onClearCart(ClearCartEvent event, Emitter<CartState> emit) async {
+  Future<void> _onClearCart(
+    ClearCartEvent event,
+    Emitter<CartState> emit,
+  ) async {
     final result = await clearCartUseCase(NoParams());
     result.fold(
       (failure) => emit(CartError(message: failure.message)),
