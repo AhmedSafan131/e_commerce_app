@@ -1,7 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:e_commerce_app/core/errors/failures.dart';
 import 'package:e_commerce_app/features/cart/domain/entities/cart_entity.dart';
-import 'package:e_commerce_app/features/cart/domain/entities/cart_item_entity.dart';
 import 'package:e_commerce_app/features/products/domain/entities/product_entity.dart';
 
 abstract class CartRepository {

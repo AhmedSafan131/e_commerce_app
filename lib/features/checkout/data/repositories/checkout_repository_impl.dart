@@ -7,7 +7,7 @@ import 'package:e_commerce_app/features/checkout/data/models/order_model.dart';
 import 'package:e_commerce_app/features/checkout/domain/entities/address_entity.dart';
 import 'package:e_commerce_app/features/checkout/domain/entities/order_entity.dart';
 import 'package:e_commerce_app/features/checkout/domain/repositories/checkout_repository.dart';
-import 'package:e_commerce_app/features/products/data/models/product_model.dart';
+
 import 'package:e_commerce_app/core/services/payment_gateway.dart';
 
 class CheckoutRepositoryImpl implements CheckoutRepository {
@@ -21,25 +21,9 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
     try {
       final orderModel = OrderModel(
         id: order.id,
-        items: order.items.map((e) {
-          final product = e.product;
-          final productModel = ProductModel(
-            id: product.id,
-            name: product.name,
-            description: product.description,
-            price: product.price,
-            imageUrl: product.imageUrl,
-            stock: product.stock,
-            category: product.category,
-          );
-          return CartItemModel(product: productModel, quantity: e.quantity);
-        }).toList(),
+        items: order.items.map((e) => CartItemModel.fromEntity(e)).toList(),
         totalAmount: order.totalAmount,
-        shippingAddress: AddressModel(
-          city: order.shippingAddress.city,
-          street: order.shippingAddress.street,
-          zipCode: order.shippingAddress.zipCode,
-        ),
+        shippingAddress: AddressModel.fromEntity(order.shippingAddress),
         status: order.status,
         date: order.date,
       );
@@ -53,11 +37,7 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
   @override
   Future<Either<Failure, bool>> validateAddress(AddressEntity address) async {
     try {
-      final addressModel = AddressModel(
-        city: address.city,
-        street: address.street,
-        zipCode: address.zipCode,
-      );
+      final addressModel = AddressModel.fromEntity(address);
       final result = await remoteDataSource.validateAddress(addressModel);
       if (result) {
         return const Right(true);
@@ -70,16 +50,10 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
   }
 
   @override
-  Future<Either<Failure, PaymentResult>> processPayment(
-    double amount,
-    String currency,
-  ) async {
+  Future<Either<Failure, PaymentResult>> processPayment(double amount, String currency) async {
     try {
       final result = paymentGateway != null
-          ? await paymentGateway!.processPayment(
-              amount: amount,
-              currency: currency,
-            )
+          ? await paymentGateway!.processPayment(amount: amount, currency: currency)
           : throw Exception('Payment gateway not configured');
 
       return Right(result);
