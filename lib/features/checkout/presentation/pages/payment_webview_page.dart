@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:e_commerce_app/core/utils/app_logger.dart';
 
 class PaymentWebViewPage extends StatefulWidget {
   final String paymentUrl;
   final String orderId;
 
-  const PaymentWebViewPage({
-    super.key,
-    required this.paymentUrl,
-    required this.orderId,
-  });
+  const PaymentWebViewPage({super.key, required this.paymentUrl, required this.orderId});
 
   @override
   State<PaymentWebViewPage> createState() => _PaymentWebViewPageState();
@@ -32,16 +29,16 @@ class _PaymentWebViewPageState extends State<PaymentWebViewPage> {
       ..setNavigationDelegate(
         NavigationDelegate(
           onPageStarted: (String url) {
-            print('🔵 [Payment WebView] Page started loading: $url');
+            AppLogger.info('🔵 [Payment WebView] Page started loading: $url');
             setState(() => _isLoading = true);
           },
           onPageFinished: (String url) {
-            print('✅ [Payment WebView] Page finished loading: $url');
+            AppLogger.success('✅ [Payment WebView] Page finished loading: $url');
             setState(() => _isLoading = false);
             _checkPaymentStatus(url);
           },
           onNavigationRequest: (NavigationRequest request) {
-            print('🔵 [Payment WebView] Navigation request: ${request.url}');
+            AppLogger.info('🔵 [Payment WebView] Navigation request: ${request.url}');
 
             // Check if payment is complete
             if (_isPaymentComplete(request.url)) {
@@ -52,7 +49,7 @@ class _PaymentWebViewPageState extends State<PaymentWebViewPage> {
             return NavigationDecision.navigate;
           },
           onWebResourceError: (WebResourceError error) {
-            print('❌ [Payment WebView] Error: ${error.description}');
+            AppLogger.error('❌ [Payment WebView] Error: ${error.description}');
             _showError('Failed to load payment page');
           },
         ),
@@ -61,12 +58,16 @@ class _PaymentWebViewPageState extends State<PaymentWebViewPage> {
   }
 
   bool _isPaymentComplete(String url) {
-    // Check for success/failure callback URLs
-    // Paymob typically redirects to success/failure URLs
-    return url.contains('success') ||
-        url.contains('callback') ||
+    // Ignore internal Paymob 3DS callbacks
+    if (url.contains('mpgs_secure_callback')) return false;
+    if (url.contains('confirmation')) return false; // Ignore confirmation callbacks
+
+    // Check for final result indicators
+    // Paymob uses different callback patterns
+    return url.contains('success=') ||
         url.contains('payment_complete') ||
-        url.contains('transaction');
+        url.contains('txn_response_code') ||
+        (url.contains('post_pay') && url.contains('pending=false'));
   }
 
   void _checkPaymentStatus(String url) {
@@ -76,47 +77,44 @@ class _PaymentWebViewPageState extends State<PaymentWebViewPage> {
   }
 
   void _handlePaymentComplete(String url) {
-    print('✅ [Payment WebView] Payment completed: $url');
+    AppLogger.success('✅ [Payment WebView] Payment completed: $url');
+
+    // Parse URL to get success status
+    final uri = Uri.parse(url);
+
+    // Check various success indicators
+    final String? successParam = uri.queryParameters['success'];
+    final String? txnResponseCode = uri.queryParameters['txn_response_code'];
+    final String? pending = uri.queryParameters['pending'];
 
     // Determine if payment was successful
-    final bool isSuccess = url.contains('success') && !url.contains('fail');
+    bool isSuccess = false;
 
-    // Show result dialog
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Text(isSuccess ? '✅ Payment Successful!' : '❌ Payment Failed'),
-        content: Text(
-          isSuccess
-              ? 'Your payment has been processed successfully.'
-              : 'Payment was not completed. Please try again.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              // Close dialog
-              Navigator.of(context).pop();
-              // Go back to orders page
-              context.go('/orders');
-            },
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
+    if (successParam == 'true') {
+      isSuccess = true;
+    } else if (txnResponseCode == 'APPROVED') {
+      isSuccess = true;
+    } else if (pending == 'false' && url.contains('post_pay')) {
+      // Paymob calls post_pay with pending=false on success
+      isSuccess = true;
+    }
+
+    AppLogger.info('💰 Payment Status: ${isSuccess ? "SUCCESS" : "FAILED"}');
+
+    // Return result to CheckoutPage
+    if (mounted) {
+      if (isSuccess) {
+        context.pop(true);
+      } else {
+        context.pop(false);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment failed or cancelled')));
+      }
+    }
   }
 
   void _showError(String message) {
     if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message), backgroundColor: Colors.red));
   }
 
   @override
@@ -132,18 +130,13 @@ class _PaymentWebViewPageState extends State<PaymentWebViewPage> {
               context: context,
               builder: (context) => AlertDialog(
                 title: const Text('Cancel Payment?'),
-                content: const Text(
-                  'Are you sure you want to cancel this payment?',
-                ),
+                content: const Text('Are you sure you want to cancel this payment?'),
                 actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('No'),
-                  ),
+                  TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('No')),
                   TextButton(
                     onPressed: () {
                       Navigator.of(context).pop(); // Close dialog
-                      context.pop(); // Go back
+                      context.pop(false); // Return false
                     },
                     child: const Text('Yes, Cancel'),
                   ),
@@ -160,11 +153,7 @@ class _PaymentWebViewPageState extends State<PaymentWebViewPage> {
             const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('Loading payment page...'),
-                ],
+                children: [CircularProgressIndicator(), SizedBox(height: 16), Text('Loading payment page...')],
               ),
             ),
         ],

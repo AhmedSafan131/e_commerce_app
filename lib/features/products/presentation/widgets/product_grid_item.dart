@@ -8,12 +8,7 @@ class ProductGridItem extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onAddToCart;
 
-  const ProductGridItem({
-    super.key,
-    required this.product,
-    required this.onTap,
-    required this.onAddToCart,
-  });
+  const ProductGridItem({super.key, required this.product, required this.onTap, required this.onAddToCart});
 
   @override
   Widget build(BuildContext context) {
@@ -22,104 +17,78 @@ class ProductGridItem extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.white,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFE2E2E2), width: 1),
         ),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: Stack(
-                children: [
-                  Hero(
-                    tag: 'product_${product.id}_image',
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(24),
-                      ),
-                      child: CachedNetworkImage(
-                        imageUrl: product.imageUrl,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) =>
-                            Container(color: Colors.grey.shade200),
-                        errorWidget: (context, url, error) =>
-                            const Icon(Icons.error),
-                      ),
-                    ),
+              child: Center(
+                child: Hero(
+                  tag: 'product_${product.id}_image',
+                  child: CachedNetworkImage(
+                    imageUrl: product.imageUrl,
+                    fit: BoxFit.contain,
+                    width: 100, // Reduced width for cleaner look in card
+                    placeholder: (context, url) => Container(color: Colors.grey.shade100),
+                    errorWidget: (context, url, error) => const Icon(Icons.error_outline),
                   ),
-                  Positioned(
-                    right: 10,
-                    bottom: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.black.withOpacity(0.85),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        '\$${product.price.toStringAsFixed(0)}',
-                        style: const TextStyle(
-                          color: AppColors.white,
-                          fontWeight: FontWeight.w700,
-                          fontFamily: 'Poppins',
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name,
+            const SizedBox(height: 12),
+            Text(
+              product.name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontFamily: 'Gilroy',
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: AppColors.darkText,
+                height: 1.2,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '1kg, Price', // Mock unit
+              style: const TextStyle(
+                fontFamily: 'Gilroy',
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+                color: AppColors.greyText,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: Text(
+                    '\$${product.price.toStringAsFixed(2)}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    product.category,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: onAddToCart,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.black,
-                        foregroundColor: AppColors.white,
-                        shape: const StadiumBorder(),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        textStyle: const TextStyle(
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                      ),
-                      child: const Text('ADD TO CART'),
+                    style: const TextStyle(
+                      fontFamily: 'Gilroy',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16, // Slightly reduced font size
+                      color: AppColors.darkText,
                     ),
                   ),
-                ],
-              ),
+                ),
+                InkWell(
+                  onTap: onAddToCart,
+                  borderRadius: BorderRadius.circular(15),
+                  child: Container(
+                    width: 40, // Reduced size
+                    height: 40,
+                    decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(15)),
+                    child: const Icon(Icons.add, color: Colors.white, size: 20),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -127,4 +96,3 @@ class ProductGridItem extends StatelessWidget {
     );
   }
 }
-

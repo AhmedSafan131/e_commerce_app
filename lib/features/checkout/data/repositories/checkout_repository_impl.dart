@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:e_commerce_app/core/errors/failures.dart';
-import 'package:e_commerce_app/features/cart/data/models/cart_item_model.dart';
+
 import 'package:e_commerce_app/features/checkout/data/datasources/checkout_remote_datasource.dart';
 import 'package:e_commerce_app/features/checkout/data/models/address_model.dart';
 import 'package:e_commerce_app/features/checkout/data/models/order_model.dart';
@@ -19,14 +19,7 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
   @override
   Future<Either<Failure, OrderEntity>> createOrder(OrderEntity order) async {
     try {
-      final orderModel = OrderModel(
-        id: order.id,
-        items: order.items.map((e) => CartItemModel.fromEntity(e)).toList(),
-        totalAmount: order.totalAmount,
-        shippingAddress: AddressModel.fromEntity(order.shippingAddress),
-        status: order.status,
-        date: order.date,
-      );
+      final orderModel = OrderModel.fromEntity(order);
       final result = await remoteDataSource.createOrder(orderModel);
       return Right(result);
     } catch (e) {

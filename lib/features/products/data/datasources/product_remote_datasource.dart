@@ -30,7 +30,9 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
           .where('nameLower', isLessThanOrEqualTo: searchEnd);
     }
 
-    productsQuery = productsQuery.orderBy('nameLower');
+    if (category == null || (query != null && query.isNotEmpty)) {
+      productsQuery = productsQuery.orderBy('nameLower');
+    }
 
     final int startIndex = (page - 1) * limit;
     if (startIndex > 0) {
@@ -45,12 +47,11 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
       return [];
     }
 
-    // If we had to fetch extra docs for pagination, skip them
     final docs = startIndex > 0 ? querySnapshot.docs.skip(startIndex).toList() : querySnapshot.docs;
 
     return docs.map((doc) {
       final data = doc.data();
-      data['id'] = doc.id; // Ensure ID is included
+      data['id'] = doc.id;
       return ProductModel.fromJson(data);
     }).toList();
   }

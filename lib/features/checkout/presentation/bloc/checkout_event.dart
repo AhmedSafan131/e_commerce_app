@@ -45,3 +45,12 @@ class StepChangedEvent extends CheckoutEvent {
   @override
   List<Object> get props => [step];
 }
+
+class PaymentSuccessEvent extends CheckoutEvent {
+  final String orderId;
+
+  const PaymentSuccessEvent(this.orderId);
+
+  @override
+  List<Object> get props => [orderId];
+}

@@ -1,100 +1,117 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const Color black = Color(0xFF000000);
-  static const Color white = Color(0xFFFFFFFF);
-  // Accent no longer used, kept for reference.
-  static const Color lime = Color(0xFFC0FF00);
+  static const Color primary = Color(0xFF53B175); // Grocery Green
+  static const Color darkText = Color(0xFF181725);
+  static const Color greyText = Color(0xFF7C7C7C);
+  static const Color background = Color(0xFFFFFFFF);
+  static const Color cardShadow = Color(0xFFE2E2E2);
+  static const Color border = Color(0xFFE2E2E2);
+
+  // Legacy mappings for compatibility
+  static const Color black = darkText;
+  static const Color white = background;
+  static const Color lime = primary;
 }
 
 final ThemeData appTheme = ThemeData(
   useMaterial3: true,
   brightness: Brightness.light,
-  scaffoldBackgroundColor: AppColors.white,
-  primaryColor: AppColors.black,
+  scaffoldBackgroundColor: AppColors.background,
+  primaryColor: AppColors.primary,
   colorScheme: const ColorScheme.light(
-    primary: AppColors.black,
-    secondary: AppColors.black,
-    background: AppColors.white,
-    surface: AppColors.white,
-    onPrimary: AppColors.black,
-    onSecondary: AppColors.black,
-    onBackground: AppColors.black,
-    onSurface: AppColors.black,
+    primary: AppColors.primary,
+    secondary: AppColors.primary,
+    background: AppColors.background,
+    surface: AppColors.background,
+    onPrimary: AppColors.white,
+    onSecondary: AppColors.white,
+    onBackground: AppColors.darkText,
+    onSurface: AppColors.darkText,
   ),
-  fontFamily: 'Poppins',
+  fontFamily: 'Gilroy', // Use Gilroy or system default if unavailable
   textTheme: const TextTheme(
     displayLarge: TextStyle(
-      fontWeight: FontWeight.w800,
-      color: AppColors.black,
-      letterSpacing: -1.0,
+      // For large headers
+      fontWeight: FontWeight.bold,
+      color: AppColors.darkText,
+      fontSize: 26,
     ),
     headlineMedium: TextStyle(
-      fontWeight: FontWeight.w700,
-      color: AppColors.black,
-      letterSpacing: -0.5,
+      // For section titles
+      fontWeight: FontWeight.w600,
+      color: AppColors.darkText,
+      fontSize: 24,
+    ),
+    titleLarge: TextStyle(
+      // For page titles
+      fontWeight: FontWeight.bold,
+      color: AppColors.darkText,
+      fontSize: 20,
     ),
     titleMedium: TextStyle(
-      fontWeight: FontWeight.w600,
-      color: AppColors.black,
+      // For product titles
+      fontWeight: FontWeight.bold,
+      color: AppColors.darkText,
+      fontSize: 16,
     ),
     bodyMedium: TextStyle(
-      fontWeight: FontWeight.w300,
-      color: AppColors.black,
+      // Standard body text
+      fontWeight: FontWeight.w500,
+      color: AppColors.darkText,
+      fontSize: 14,
     ),
     bodySmall: TextStyle(
-      fontWeight: FontWeight.w300,
-      color: Colors.black54,
+      // Descriptions/Subtitles
+      fontWeight: FontWeight.w500,
+      color: AppColors.greyText,
+      fontSize: 13,
     ),
   ),
   appBarTheme: const AppBarTheme(
-    backgroundColor: AppColors.white,
+    backgroundColor: AppColors.background,
     elevation: 0,
-    centerTitle: false,
+    centerTitle: true,
     titleTextStyle: TextStyle(
-      fontFamily: 'Poppins',
-      fontWeight: FontWeight.w600,
+      fontFamily: 'Gilroy',
+      fontWeight: FontWeight.bold,
       fontSize: 20,
-      color: AppColors.black,
+      color: AppColors.darkText,
     ),
-    iconTheme: IconThemeData(color: AppColors.black),
+    iconTheme: IconThemeData(color: AppColors.darkText),
   ),
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
-    fillColor: Color(0xFFF5F5F5),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(24),
-      borderSide: BorderSide.none,
-    ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(24),
-      borderSide: BorderSide(color: Color(0xFFE0E0E0)),
-    ),
+    fillColor: Color(0xFFF2F3F2),
+    border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
     focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(24),
-      borderSide: BorderSide(color: AppColors.black, width: 1.5),
+      borderRadius: BorderRadius.circular(15),
+      borderSide: const BorderSide(color: AppColors.primary, width: 1.0),
     ),
+    prefixIconColor: AppColors.darkText,
+    hintStyle: const TextStyle(color: AppColors.greyText, fontSize: 14, fontWeight: FontWeight.w600),
   ),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
-      backgroundColor: AppColors.black,
+      backgroundColor: AppColors.primary,
       foregroundColor: AppColors.white,
-      shape: const StadiumBorder(),
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
-      textStyle: const TextStyle(
-        fontFamily: 'Poppins',
-        fontWeight: FontWeight.w600,
-        fontSize: 16,
-      ),
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(19)),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+      textStyle: const TextStyle(fontFamily: 'Gilroy', fontWeight: FontWeight.w600, fontSize: 18),
     ),
   ),
+
   bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-    backgroundColor: AppColors.white,
-    selectedItemColor: AppColors.black,
-    unselectedItemColor: Colors.black54,
+    backgroundColor: AppColors.background,
+    selectedItemColor: AppColors.primary,
+    unselectedItemColor: AppColors.darkText,
     type: BottomNavigationBarType.fixed,
-    showSelectedLabels: false,
-    showUnselectedLabels: false,
+    showSelectedLabels: true,
+    showUnselectedLabels: true,
+    elevation: 10,
+    selectedLabelStyle: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: AppColors.primary),
+    unselectedLabelStyle: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: AppColors.darkText),
   ),
 );
-

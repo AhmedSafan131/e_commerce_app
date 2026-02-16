@@ -21,16 +21,14 @@ class _OrdersPageState extends State<OrdersPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Orders')),
+      appBar: AppBar(title: const Text('Orders'), automaticallyImplyLeading: false),
       body: BlocBuilder<OrdersBloc, OrdersState>(
         builder: (context, state) {
           if (state.status == OrdersStatus.loading) {
             return const Center(child: CircularProgressIndicator());
           }
           if (state.status == OrdersStatus.failure) {
-            return Center(
-              child: Text(state.errorMessage ?? 'Failed to load orders'),
-            );
+            return Center(child: Text(state.errorMessage ?? 'Failed to load orders'));
           }
           if (state.orders.isEmpty) {
             return const Center(child: Text('No orders yet'));

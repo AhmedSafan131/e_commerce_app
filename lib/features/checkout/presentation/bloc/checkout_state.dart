@@ -1,3 +1,4 @@
+import 'package:e_commerce_app/features/cart/domain/entities/cart_entity.dart';
 import 'package:equatable/equatable.dart';
 import 'package:e_commerce_app/features/checkout/domain/entities/address_entity.dart';
 import 'package:e_commerce_app/features/checkout/domain/entities/order_entity.dart';
@@ -20,6 +21,7 @@ class CheckoutState extends Equatable {
   final String? errorMessage;
   final String? paymentUrl; // New: Payment URL for WebView
   final String? orderId; // New: Order ID from payment gateway
+  final CartEntity? cart;
 
   const CheckoutState({
     this.status = CheckoutStatus.initial,
@@ -29,6 +31,7 @@ class CheckoutState extends Equatable {
     this.errorMessage,
     this.paymentUrl,
     this.orderId,
+    this.cart,
   });
 
   CheckoutState copyWith({
@@ -39,6 +42,7 @@ class CheckoutState extends Equatable {
     String? errorMessage,
     String? paymentUrl,
     String? orderId,
+    CartEntity? cart,
   }) {
     return CheckoutState(
       status: status ?? this.status,
@@ -48,6 +52,7 @@ class CheckoutState extends Equatable {
       errorMessage: errorMessage ?? this.errorMessage,
       paymentUrl: paymentUrl ?? this.paymentUrl,
       orderId: orderId ?? this.orderId,
+      cart: cart ?? this.cart,
     );
   }
 
@@ -60,5 +65,6 @@ class CheckoutState extends Equatable {
     errorMessage,
     paymentUrl,
     orderId,
+    cart,
   ];
 }

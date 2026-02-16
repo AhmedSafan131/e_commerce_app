@@ -22,14 +22,8 @@ class CartLocalDataSourceImpl implements CartLocalDataSource {
       return [];
     }
 
-    try {
-      final List<dynamic> jsonList = json.decode(jsonString) as List<dynamic>;
-      return jsonList.map((e) => CartItemModel.fromJson(e as Map<String, dynamic>)).toList();
-    } catch (_) {
-      // If stored data is corrupted or from an old format, reset cart gracefully.
-      await sharedPreferences.remove(CACHED_CART);
-      return [];
-    }
+    final List<dynamic> jsonList = json.decode(jsonString) as List<dynamic>;
+    return jsonList.map((e) => CartItemModel.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   @override

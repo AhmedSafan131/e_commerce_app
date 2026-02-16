@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:e_commerce_app/core/errors/failures.dart';
 import 'package:e_commerce_app/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:e_commerce_app/features/auth/domain/entities/user_entity.dart';
@@ -16,8 +17,10 @@ class AuthRepositoryImpl implements AuthRepository {
       return Right(user);
     } on Failure catch (e) {
       return Left(e);
+    } on FirebaseAuthException catch (e) {
+      return Left(ServerFailure(e.message ?? 'Authentication failed'));
     } catch (e) {
-      return const Left(ServerFailure('An unexpected error occurred'));
+      return Left(ServerFailure('An unexpected error occurred: ${e.toString()}'));
     }
   }
 
@@ -28,8 +31,10 @@ class AuthRepositoryImpl implements AuthRepository {
       return Right(user);
     } on Failure catch (e) {
       return Left(e);
+    } on FirebaseAuthException catch (e) {
+      return Left(ServerFailure(e.message ?? 'Registration failed'));
     } catch (e) {
-      return const Left(ServerFailure('An unexpected error occurred'));
+      return Left(ServerFailure('An unexpected error occurred: ${e.toString()}'));
     }
   }
 
@@ -40,8 +45,10 @@ class AuthRepositoryImpl implements AuthRepository {
       return const Right(null);
     } on Failure catch (e) {
       return Left(e);
+    } on FirebaseAuthException catch (e) {
+      return Left(ServerFailure(e.message ?? 'Logout failed'));
     } catch (e) {
-      return const Left(ServerFailure('An unexpected error occurred'));
+      return Left(ServerFailure('An unexpected error occurred: ${e.toString()}'));
     }
   }
 

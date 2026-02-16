@@ -32,26 +32,35 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     );
   }
 
+  bool _isLoadingMore = false;
+
   Future<void> _onLoadMoreProducts(LoadMoreProductsEvent event, Emitter<ProductState> emit) async {
+    if (_isLoadingMore) return;
+
     final currentState = state;
     if (currentState is ProductLoaded && !currentState.hasReachedMax) {
-      final nextPage = currentState.page + 1;
-      final result = await getProductsUseCase(
-        GetProductsParams(category: currentState.category, query: currentState.query, page: nextPage),
-      );
+      _isLoadingMore = true;
+      try {
+        final nextPage = currentState.page + 1;
+        final result = await getProductsUseCase(
+          GetProductsParams(category: currentState.category, query: currentState.query, page: nextPage),
+        );
 
-      result.fold(
-        (failure) => emit(ProductError(message: failure.message)),
-        (products) => emit(
-          products.isEmpty
-              ? currentState.copyWith(hasReachedMax: true)
-              : currentState.copyWith(
-                  products: currentState.products + products,
-                  page: nextPage,
-                  hasReachedMax: products.length < 10,
-                ),
-        ),
-      );
+        result.fold(
+          (failure) => emit(ProductError(message: failure.message)),
+          (products) => emit(
+            products.isEmpty
+                ? currentState.copyWith(hasReachedMax: true)
+                : currentState.copyWith(
+                    products: currentState.products + products,
+                    page: nextPage,
+                    hasReachedMax: products.length < 10,
+                  ),
+          ),
+        );
+      } finally {
+        _isLoadingMore = false;
+      }
     }
   }
 

@@ -16,47 +16,29 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<UserModel> login(String email, String password) async {
-    try {
-      final userCredential = await firebaseAuth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      if (userCredential.user == null) {
-        throw const ServerFailure('User is null');
-      }
-      return UserModel.fromFirebaseUser(userCredential.user!);
-    } on FirebaseAuthException catch (e) {
-      throw ServerFailure(e.message ?? 'Authentication failed');
-    } catch (e) {
-      throw ServerFailure(e.toString());
+    final userCredential = await firebaseAuth.signInWithEmailAndPassword(email: email, password: password);
+
+    if (userCredential.user == null) {
+      throw const ServerFailure('User is null');
     }
+
+    return UserModel.fromFirebaseUser(userCredential.user!);
   }
 
   @override
   Future<UserModel> register(String email, String password) async {
-    try {
-      final userCredential = await firebaseAuth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      if (userCredential.user == null) {
-        throw const ServerFailure('User is null');
-      }
-      return UserModel.fromFirebaseUser(userCredential.user!);
-    } on FirebaseAuthException catch (e) {
-      throw ServerFailure(e.message ?? 'Registration failed');
-    } catch (e) {
-      throw ServerFailure(e.toString());
+    final userCredential = await firebaseAuth.createUserWithEmailAndPassword(email: email, password: password);
+
+    if (userCredential.user == null) {
+      throw const ServerFailure('User is null');
     }
+
+    return UserModel.fromFirebaseUser(userCredential.user!);
   }
 
   @override
   Future<void> logout() async {
-    try {
-      await firebaseAuth.signOut();
-    } catch (e) {
-      throw ServerFailure(e.toString());
-    }
+    await firebaseAuth.signOut();
   }
 
   @override
